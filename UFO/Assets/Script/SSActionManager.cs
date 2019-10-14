@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class SSActionManager : MonoBehaviour, ISSActionCallback
 {
     private Dictionary<int, SSAction> actions = new Dictionary<int, SSAction>();
@@ -115,20 +116,18 @@ public class FlyAction : SSAction
 }
 
 
-public class CCActionManager : SSActionManager
+public class CCActionManager : SSActionManager, IActionManager
 {
 
     public FlyAction fly;                        
-    public FirstController scene_controller;          
+    
     protected void Start()
     {
-        scene_controller = (FirstController)SSDirector.GetInstance().CurrentScenceController;
-        scene_controller.action_manager = this;
     }
-    public void Fly(GameObject disk, float angle, float power)
+    public void Fly(GameObject ufo, float angle, float v)
     {
-        fly = FlyAction.GetSSAction(disk.GetComponent<UfoProperty>().direction, angle, power);
-        this.RunAction(disk, fly, this);
+        fly = FlyAction.GetSSAction(ufo.GetComponent<UfoProperty>().direction, angle, v);
+        this.RunAction(ufo, fly, this);
     }
 }
 

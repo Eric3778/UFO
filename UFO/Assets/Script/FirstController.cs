@@ -2,6 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+public interface IActionManager
+{
+    void Fly(GameObject ufo, float angle, float v);
+}
+
 public interface ISceneController
 {
     void LoadResources();
@@ -13,8 +19,11 @@ public interface IUserAction
     int GetScore();
     int GetLife();
     int GetRound();
+    int GetAction();
     void ReStart();
+    void SetAction(int type);
 }
+
 public enum SSActionEventType : int { Started, Competeted }
 public interface ISSActionCallback
 {
@@ -39,7 +48,8 @@ public class SSDirector : System.Object
 
 public class FirstController : MonoBehaviour, ISceneController, IUserAction
 {
-    public CCActionManager action_manager;
+    public IActionManager action_manager1;
+    public IActionManager action_manager2;
     public Factory disk_factory;
     public UserGUI user_gui;
     public CCJudgement judgement;
@@ -48,7 +58,8 @@ public class FirstController : MonoBehaviour, ISceneController, IUserAction
     private List<GameObject> disk_notshot = new List<GameObject>(); 
     private int curr_round = 1;                                     
     private float speed = 2f;                                     
-    private bool playing_game = false;                         
+    private bool playing_game = false;
+    private int action_type = 1;
 
     void Start ()
     {
@@ -56,7 +67,8 @@ public class FirstController : MonoBehaviour, ISceneController, IUserAction
         director.CurrentScenceController = this;             
         disk_factory = Singleton<Factory>.Instance;
         judgement = Singleton<CCJudgement>.Instance;
-        action_manager = gameObject.AddComponent<CCActionManager>() as CCActionManager;
+        action_manager1 = gameObject.AddComponent<CCActionManager>() as IActionManager;
+        action_manager2 = gameObject.AddComponent<PhysisActionManager>() as IActionManager;
         user_gui = gameObject.AddComponent<UserGUI>() as UserGUI;
     }
 	
@@ -101,13 +113,16 @@ public class FirstController : MonoBehaviour, ISceneController, IUserAction
             disk.transform.position = position;
             float power = Random.Range(10f, 15f);
             float angle = Random.Range(15f, 28f);
-            action_manager.Fly(disk,angle,power);
+            if(action_type==1)
+                action_manager1.Fly(disk, angle, power);
+            else
+                action_manager2.Fly(disk, angle, power);
         }
 
         for (int i = 0; i < disk_notshot.Count; i++)
         {
             GameObject temp = disk_notshot[i];
-            if (temp.transform.position.y < 0 && temp.gameObject.activeSelf == true)
+            if ((temp.transform.position.x > 16 || temp.transform.position.x < -16 || temp.transform.position.y <= 0.1) && temp.gameObject.activeSelf == true)
             {
                 disk_factory.Recover(disk_notshot[i]);
                 disk_notshot.Remove(disk_notshot[i]);
@@ -157,6 +172,14 @@ public class FirstController : MonoBehaviour, ISceneController, IUserAction
     public int GetRound()
     {
         return curr_round;
+    }
+    public int GetAction()
+    {
+        return action_type;
+    }
+    public void SetAction(int type)
+    {
+        action_type = type;
     }
     public void ReStart()
     {
